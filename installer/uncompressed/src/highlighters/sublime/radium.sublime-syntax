@@ -1,0 +1,98 @@
+%YAML 1.2
+---
+name: Radium
+file_extensions:
+  - rad
+scope: source.radium
+
+contexts:
+  main:
+    - include: comments
+    - include: strings
+    - include: package-declarations
+    - include: control-flow
+    - include: function-declarations
+    - include: special-function-calls
+    - include: function-names
+    - include: variable-assignments
+    - include: parenthesis
+    - include: function-call
+
+  comments:
+    - match: '##.*'
+      scope: comment.line.hash.radium
+    - match: '#.*'
+      scope: constant.language
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.radium
+      push:
+        - meta_scope: string.quoted.double.radium
+        - match: '"'
+          scope: punctuation.definition.string.end.radium
+          pop: true
+
+  package-declarations:
+    - match: '\b(package)\s+(\w+)\b'
+      captures:
+        1: keyword.control.radium
+        2: entity.name.namespace.radium
+
+  control-flow:
+    - match: '\b(if|else|while)\b'
+      scope: keyword.control.radium
+
+  function-declarations:
+    - match: '\b(func)\s+(\w+)\s*\('
+      captures:
+        1: keyword.control.radium
+        2: entity.name.function.radium
+      push: function-parameters
+
+  function-parameters:
+    - match: '\)'
+      scope: punctuation.section.parentheses.end.radium
+      pop: true
+    - match: ','
+      scope: punctuation.separator.parameters.radium
+    - include: special-function-calls
+    - match: '\b\w+\b'
+      scope: variable.parameter.radium
+
+  function-names:
+    - match: '\b(print|readFile|mkdir|writeFile|await|input|true|false)\b'
+      scope: support.function.radium
+
+  variable-assignments:
+    - match: '(\w+)\s*(>>)\s*'
+      captures:
+        1: variable.other.assignment.left.radium
+        2: keyword.operator.assignment.radium
+
+special-function-calls:
+  - match: '\b(await)\((\w+)\(\)\)'
+    captures:
+      1: keyword.control.radium
+      2: support.function.radium
+
+parenthesis:
+  - match: '\('
+    scope: punctuation.section.parentheses.begin.radium
+    push:
+      - meta_scope: meta.parentheses.radium
+      - match: '\)'
+        scope: punctuation.section.parentheses.end.radium
+        pop: true
+      - include: strings
+      - match: '(\b\w+\b)\s*\(\s*\)'
+        captures:
+          1: support.function.radium
+      - match: '\b\w+\b'
+        scope: variable.parameter.radium
+
+function-call:
+    - match: '(\b\w+\b)\s*\(\s*(.*)\)'
+      captures:
+        1: support.function.radium
+        2: variable.parameter.radium
